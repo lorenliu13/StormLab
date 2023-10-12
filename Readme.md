@@ -27,7 +27,7 @@ Required packages are listed in requirements.txt
 1. Download the example data and unzip at the code folder "/StormLab."
 	- Google Drive: https://drive.google.com/file/d/1MJzO8bhKJxZ5sc7OuIQQQPw3AmQLKSME/view?usp=sharing
 	- The folder should look like: "/StormLab/data"
-	- Running the code below will create an "/output" folder and save results in it.
+	- Running the code below will create an "/output" folder to save outputs in it. 
 1. Rainstorm tracking
 	- Perform storm tracking on ERA5 data
 	  
