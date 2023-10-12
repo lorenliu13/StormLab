@@ -1,4 +1,4 @@
-# Extract ERA5 data associated with AR events
+# Generate CESM2 covariate fields for each identified rainstorm events.
 # Yuan Liu
 # 2023/01/04
 

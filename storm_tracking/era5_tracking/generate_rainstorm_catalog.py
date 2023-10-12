@@ -1,4 +1,4 @@
-# multi-processing version of AR catalog generation for 6-hour
+# Create a storm catalog (dataframe) of identified rainstorm events.
 # Yuan Liu
 # 05/09/2023
 
@@ -136,14 +136,6 @@ def ar_catalog_generation(task:dict):
         # get the number of pixels of storm at each time step
         pixels_num = np.sum(np.isin(track_array, storm_label), axis=(1, 2))
 
-        # initial selection
-        # if the duration is less than 48 hours, remove it
-        # print("Duration is {0}".format(np.sum(pixels_num != 0) * time_interval))
-        # if np.sum(pixels_num != 0) * time_interval < 48:
-        #
-        #     print("AR duration is less than 48 hours, removed.")
-        #     continue
-
         # extract the storm time sequence
         ar_track_array = track_array[pixels_num != 0]
         prcp_track_array = attach_prcp[pixels_num != 0]
@@ -253,13 +245,6 @@ def ar_catalog_generation(task:dict):
             record['prcp_area(sqkm)'] = curr_storm_area
             record['intense_ivt_area(sqkm)'] = intense_ivt_area
 
-            # length properties
-            # record['ivt_length(km)'] = ar_length
-            # record['ivt_width(km)'] = ar_width
-            # record['ivt_lw_ratio(km)'] = ar_lw_ratio
-
-            # curvature
-            # record['ivt_sum_angle(deg)'] = angle_sum
 
             # ivt intensity
             record['avg_ivt_intensity(kg/m/s)'] = avg_ivt
@@ -283,14 +268,6 @@ def ar_catalog_generation(task:dict):
             # append to the full dataframe
             ar_event_df = ar_event_df.append(record_df, ignore_index=True)
 
-            # create a trajectory dataframe
-            # track_df = pd.DataFrame(
-            #     {"x_cent(m)": full_x_centroid_list,
-            #     "y_cent(m)": full_y_centroid_list,
-            #     "x_cent(deg)": x_centroid_deg_list,
-            #     "y_cent(deg)": y_centroid_deg_list}
-            # )
-            # track_df.to_csv(r"J:\Mississippi_design_storm\ar_catalog\traject" + "/" + "{0}_{1}_track.csv".format(storm_id, time_index), index=False)
 
         # Get the computed precipitation area over the mississippi basin
         miss_area_list = ar_event_df['miss_avg_prcp_area(sqkm)'].values

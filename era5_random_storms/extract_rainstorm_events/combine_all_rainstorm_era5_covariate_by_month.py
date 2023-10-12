@@ -1,4 +1,4 @@
-# Combine the era ar covariates into months
+# Combine the ERA5 covariate fields of all rainstorm events and regrid them to AORC resolution.
 # Yuan Liu
 # 2023/01/04
 

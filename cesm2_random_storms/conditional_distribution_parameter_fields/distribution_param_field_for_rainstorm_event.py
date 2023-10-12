@@ -1,4 +1,4 @@
-# Generate CSGD parameter fields
+# Generate conditional distribution parameter fields based on fitted coefficients and CESM2 large-scale atmospheric variable fields.
 
 import os
 import numpy as np

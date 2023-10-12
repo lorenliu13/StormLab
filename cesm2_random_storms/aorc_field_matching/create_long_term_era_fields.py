@@ -1,4 +1,4 @@
-# Create long-term 1979-2021 era covariate and aorc field series for matching
+# Create long-term 1979-2021 ERA5 covariate and AORC fields for matching
 # Yuan Liu
 # 2023/07/19
 

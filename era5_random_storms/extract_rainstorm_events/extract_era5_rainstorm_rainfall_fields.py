@@ -1,4 +1,4 @@
-# extract rainstorm rainfall data from 6-hour AORC data
+# Generate AORC rainfall fields for each identified rainstorm events.
 
 import xarray as xr
 import pandas as pd

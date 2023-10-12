@@ -1,5 +1,4 @@
-# Combine the aorc rainfall data into months, keeping the original resolution
-# The raw december ar aorc rainfall for 1979 to 2021 will be 6 GB
+# Combine the AORC rainfall fields of all rainstorm events.
 # Yuan Liu
 # 2023/02/08
 

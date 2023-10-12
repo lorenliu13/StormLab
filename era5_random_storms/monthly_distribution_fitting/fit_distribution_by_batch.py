@@ -1,4 +1,5 @@
-# On every ERA5 grid, fit a CSGD hybrid distribution
+# Load the dataframe for the current batch (containing 1,000 grids time series of ERA5 variables or AORC rainfall).
+# Perform distribution fitting for each grid in the batch.
 # Yuan Liu
 # 03/28/2023
 

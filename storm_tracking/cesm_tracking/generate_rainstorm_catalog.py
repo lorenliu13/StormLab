@@ -1,4 +1,4 @@
-# multi-processing version of AR catalog generation for 6-hour
+# Create a storm catalog (dataframe) of identified rainstorm events.
 # Yuan Liu
 # 05/09/2023
 

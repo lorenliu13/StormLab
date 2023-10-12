@@ -1,4 +1,4 @@
-# Bias correct CESM2 data against ERA5 using CDF-t method
+# Bias-correct the long-term series of CESM2 variable array against ERA5 using the CDF-t method.
 # Yuan Liu
 # 2023/10/11
 import numpy as np

@@ -1,4 +1,4 @@
-# Generate TNGD parameter field based on fitting results
+# Generate the fitted distribution parameter coefficient fields.
 # Yuan Liu
 # 06/15/2023
 

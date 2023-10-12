@@ -1,4 +1,4 @@
-# Simulate AR rainfall field on CHTC server
+# Generate simulated rainfall fields based on noise and conditional distribution parameter fields.
 # Yuan Liu
 # 2023/02/13
 

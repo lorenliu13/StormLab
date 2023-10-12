@@ -1,4 +1,4 @@
-# Generate bias corrected netcdf for CESM2 data by each year
+# Split the long-term bias-corrected CESM2 into yearly array saved by netcdf files.
 # Yuan Liu
 # 2023/10/11
 import numpy as np

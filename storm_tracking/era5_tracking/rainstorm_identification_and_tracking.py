@@ -1,4 +1,4 @@
-# ar tracking algorithm, including ar identification and tracking, and attach associated precipitation with the ar event
+# Identify and track strong integrated water vapor transport (IVT) event based on the ERA5 IVT data, and attach concurrent ERA5 precipitation.
 # Yuan Liu
 # 05/09/2023
 
@@ -175,58 +175,60 @@ def attach_prcp(track_array, prcp_array):
 
 if __name__ == "__main__":
 
+    # Define a list of years from 1979 to 2021.
     year_list = np.arange(1979, 2022)
     # year_list = [2020]
+
     for year in year_list:
-        # save location
+        # Specify the directory where the processed data will be saved.
         save_folder = r"/home/yliu2232/miss_design_storm/6h_tracking_cesm_res"
 
-        # load 3-hour ERA5 integrated water vapour flux (IVT) data with dimension (time, lat, lon)
+        # Load 3-hourly ERA5 integrated water vapour flux (IVT) data for the current year.
+        # Data dimensions are expected to be (time, lat, lon).
         ivt_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/raw_data/ERA5/ERA5_6h" + "/" + str(
             year) + "/" + "ERA5_6H_vertical_integral_of_water_vapour_flux_{0}_cesm_res.nc".format(year))
         ivt_array = ivt_xarray['q'].data
 
-        # set up idnetification and tracking parameters
-        # morph_radius = 4
+        # Set up identification and tracking parameters
         morph_radius = 1
         high_threshold = 500
         low_threshold = 250
         expand_distance = 5
-        # expand_distance = 20
 
-        # create an empty array
+        # Initialize an array with zeros to store AR identifications.
         identification_array = np.zeros(ivt_array.shape)
-        print("Start AR identification in {0}".format(year))
-        # for each time step, perform ar identification on the IVT field
+        print("Start identification in {0}".format(year))
+
+        # Loop through each time step in the loaded IVT data.
         for time_index in range(ivt_array.shape[0]):
+            # Extract IVT data for the current time step.
             ivt_data = ivt_array[time_index, :, :]
+            # Identify IVT event in the IVT data for the current time step using specified parameters.
             grown_label_array = ivt_identification(ivt_data, morph_radius, high_threshold, low_threshold, expand_distance)
-            # relabel
+            # Relabel the identified regions for consistency.
             grown_label_array = relabel_sequential(grown_label_array)[0]
-            # update empty array
+            # Update the main identification array with the results for the current time step.
             identification_array[time_index] = grown_label_array
 
-        # save the identified array
+        # Convert the data type of the identification array to integer.
         identification_array = identification_array.astype('int')
+        # Save the identification array for the current year to the specified directory.
         np.save(save_folder + "/" + "{0}_identification.npy".format(year), identification_array)
 
-        # load storm identification array
-        # identification_array = np.load(save_folder + "/" + "{0}_identification.npy".format(year))
-
-        # run ar tracking code
+        # Track IVTs using the identification array.
         print("Start AR tracking in {0}".format(year))
         track_array = track(identification_array, ratio_threshold=0.2, dry_spell_time=0)
 
-        # change the data type to int
+        # Convert the data type of the tracking array to integer.
         track_array = track_array.astype('int')
-        # save tracking array
+        # Save the tracking array for the current year to the specified directory.
         np.save(save_folder + "/" + "{0}_tracking.npy".format(year), track_array)
 
-        # load 3-hour ERA5 precipitation data
+        # Load 3-hourly ERA5 precipitation data for the current year.
         prcp_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/raw_data/ERA5/ERA5_6h" + "/" + str(
             year) + "/" + "ERA5_6H_mean_total_precipitation_rate_{0}_cesm_res.nc".format(year))
         prcp_array = prcp_xarray['mtpr'].data * 3600  # convert it to mm/hour
 
-        # attach associated precipitation event to each ar event
+        # Associate each tracked AR event with its corresponding precipitation event.
         prcp_label_array = attach_prcp(track_array, prcp_array)
         np.save(save_folder + "/" + "{0}_attached_prcp.npy".format(year), prcp_label_array)

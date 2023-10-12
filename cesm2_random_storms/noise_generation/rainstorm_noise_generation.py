@@ -1,4 +1,4 @@
-# Generate noise field of AR event using new code
+# Generate space-time noise fields for each CESM2 rainstorm events.
 # Yuan Liu
 # 2023/05/08
 

@@ -1,4 +1,4 @@
-# Find the 5 cloest aorc rainfall fields
+# Sample the AORC fields for each CESM2 rainstorms based on k nearest neighbor method.
 # Yuan Liu
 # 2023/07/06
 

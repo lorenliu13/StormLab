@@ -1,4 +1,4 @@
-# ar tracking algorithm, including ar identification and tracking, and attach associated precipitation with the ar event
+# Identify and track strong integrated water vapor transport (IVT) event based on the CESM2 IVT data, and attach concurrent CESM2 precipitation.
 # Yuan Liu
 # 05/09/2023
 

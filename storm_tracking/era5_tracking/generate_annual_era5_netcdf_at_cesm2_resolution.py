@@ -1,4 +1,4 @@
-# Create ERA5 annual data at CESM2 resolution
+# Regrid the yearly ERA5 data to CESM2 resolution before rainstorm tracking.
 # Yuan Liu
 # 2023/07/17
 import xarray as xr
