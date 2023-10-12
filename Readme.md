@@ -181,6 +181,10 @@ The detailed code structure and functions are as follows:
 - Code: src/cesm2_random_storms/random_rainfall_simulation/rainstorm_rainfall_simulation.py
 - Function: Generate simulated rainfall fields based on noise and conditional distribution parameter fields. 
 
+## Citation
+If you use this model in your work, please cite:
+*Our publication is under preparation.*
+
 ## Contributing
 Feel free to open an issue for bugs and feature requests.
 
@@ -190,3 +194,9 @@ StormLab is released under the [MIT License](https://opensource.org/licenses/MIT
 ## Authors
 * [Yuan Liu](https://her.cee.wisc.edu/group-members/) - *research & developer*
 * [Daniel B. Wright](https://her.cee.wisc.edu/group-members/) - *research*
+
+## Attribution
+This project uses code from the following repositories:
+- [pysteps](https://pysteps.readthedocs.io/en/stable/)
+- [STREAM](https://github.com/sam-hartke/STREAM)
+- [starch](https://github.com/lorenliu13/starch/tree/master)
