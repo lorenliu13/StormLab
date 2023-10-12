@@ -4,7 +4,6 @@
 
 import xarray as xr
 import numpy as np
-import xesmf as xe
 import pandas as pd
 import os
 import multiprocessing

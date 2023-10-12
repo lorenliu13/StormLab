@@ -4,16 +4,9 @@
 
 
 import copy
-import os
 from math import sqrt
 import numpy as np
-from scipy.ndimage.measurements import center_of_mass
-from scipy.spatial.distance import pdist, squareform
 from skimage.segmentation import relabel_sequential
-from sklearn.metrics.pairwise import euclidean_distances
-import pandas as pd
-from datetime import datetime
-from tqdm import tqdm
 
 
 def track(grown_array: np.ndarray, ratio_threshold: float, dry_spell_time: int):

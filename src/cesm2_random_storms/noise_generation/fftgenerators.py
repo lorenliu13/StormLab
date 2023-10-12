@@ -48,9 +48,6 @@ import numpy as np
 from scipy import optimize
 import sys
 import numpy.fft as fft
-# from tapering import compute_window_function
-# import arrays
-# import spectral
 
 
 

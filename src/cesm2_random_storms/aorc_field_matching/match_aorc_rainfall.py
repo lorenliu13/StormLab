@@ -5,11 +5,9 @@
 
 import xarray as xr
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import multiprocessing
-from scipy.stats import pearsonr
 
 
 def compute_euclidean_distance(A, B):

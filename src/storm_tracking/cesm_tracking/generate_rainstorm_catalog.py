@@ -5,14 +5,8 @@
 
 import xarray as xr
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import math
-from scipy.interpolate import interp1d
 from pyproj import Transformer
-# from AR_trajectory_pan import ar_trajectory
-from tqdm import tqdm
-import multiprocessing
 import os
 from datetime import datetime
 
