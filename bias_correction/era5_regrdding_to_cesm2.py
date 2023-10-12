@@ -1,4 +1,4 @@
-# Obtain long-term annual series of era5 fields at CESM2 resolution
+# Obtain long-term seasonal series of era5 fields at CESM2 resolution
 # Yuan Liu
 # 2023/10/11
 import xarray as xr
