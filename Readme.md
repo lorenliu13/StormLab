@@ -69,7 +69,7 @@ Required packages are listed in requirements.txt
 	  
 		`python src/cesm2_random_storms/random_rainfall_simulation/rainstorm_rainfall_simulation.py`
 	
-6. The other codes requires a complete dataset to process and are not shown as examples here.
+6. The other codes require a complete dataset to process and do not support example run.
 
 ## Code details:
 The detailed code structure and functions are as follows: 
