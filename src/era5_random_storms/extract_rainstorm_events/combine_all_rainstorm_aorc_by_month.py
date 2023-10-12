@@ -53,27 +53,10 @@ for month in month_list:
                 # skip this ar id due to data not available
                 continue
 
-            # if ar_id == 202100315:
-            #     # skip this ar id due to data not available
-            #     continue
-            # ar_record = ar_catalog[ar_catalog['storm_id'] == ar_id]
-            # get the ar duration
-            # ar_duration = ar_record['duration(hour)'].values[0] * 3
-            # only keep those longer than 48 hours
-            # if ar_duration < 48:
-            #     continue
-
             # load ar nc file
             aorc_xarray_loc = r"/home/yliu2232/miss_design_storm/6h_ar_event_cesm_res/{0}/{1}".format(year, ar_id)
             aorc_xarray = xr.load_dataset(aorc_xarray_loc + "/" + "{0}_aorc.nc".format(ar_id))
             aorc_array = aorc_xarray['aorc'].data
-
-            # flatten the array into (24, lon_grids * lat_grids)
-            # aorc_array_flatten = aorc_array.reshape(aorc_array.shape[0], aorc_array.shape[1] * aorc_array.shape[2])
-            # # extract at ERA data points
-            # era_grid_aorc_array = aorc_array_flatten[:, min_dis_index]
-            # # reshape to ERA5 grid space
-            # era_grid_aorc_array = era_grid_aorc_array.reshape(aorc_array.shape[0], 85, 153)
 
             full_monthly_aorc_rainfall_list.append(aorc_array)
 
@@ -82,12 +65,3 @@ for month in month_list:
 
     # save as a numpy array
     np.save(save_directory + "/" + "aorc_{0}.npy".format(month), full_monthly_aorc_rainfall_list)
-    # flatten to two dimension (time, lon * lat)
-    # full_monthly_aorc_rainfall_list = full_monthly_aorc_rainfall_list.reshape(full_monthly_aorc_rainfall_list.shape[0], full_monthly_aorc_rainfall_list.shape[1] * full_monthly_aorc_rainfall_list.shape[2])
-
-    # # save each time series as a separate file
-    # for i in range(full_monthly_aorc_rainfall_list.shape[1]):
-    #     monthly_aorc_series = full_monthly_aorc_rainfall_list[:, i]
-    #     df = pd.DataFrame({"aorc_rainfall":monthly_aorc_series})
-    #     df.to_csv(save_directory + "/" + "{0}.csv".format(i), index = False)
-

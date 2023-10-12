@@ -44,10 +44,6 @@ def create_folder(folder_name):
         pass
 
 variable_list = ["vertical_integral_of_water_vapour_flux", "mean_total_precipitation_rate", "total_column_water_vapour"]
-# "mean_total_precipitation_rate", "total_column_water_vapour",
-# "mean_vertically_integrated_moisture_divergence",
-# "vertical_integral_of_water_vapour_flux",
-# "500_vertical_velocity"
 
 # load the corresponding index of aorc data to match the ERA5 grid
 # min_dis_index = np.load(r"D:\Miss_design_storm\AORC_data" + "\\" + "min_dis_index_list.npy")

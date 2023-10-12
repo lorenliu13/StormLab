@@ -101,8 +101,6 @@ if __name__ == "__main__":
     print("Total storm number: {0}".format(storm_labels.shape[0]))
 
     # get projected coordinates
-    # ivt_lon = np.linspace(-112, -80.25, 128)
-    # ivt_lat = np.linspace(50, 29, 85)
     ivt_lon = np.linspace(-113.75, -78.75, 29)
     ivt_lat = np.linspace(50.41884817, 28.7434555, 24)
 
@@ -122,9 +120,7 @@ if __name__ == "__main__":
     lat_prj_array = np.reshape(np.array(lat_prj_array), lat_array.shape)
     lon_prj_array = np.reshape(np.array(lon_prj_array), lat_array.shape)
 
-    # lat_cell_degree = 0.25  # because it is going down
-    # lon_cell_degree = 0.25
-    lat_cell_degree = 0.94240838  # because it is going down
+    lat_cell_degree = 0.94240838
     lon_cell_degree = 1.25
     # compute the area of each pixel
     pixel_area = np.cos(lat_array * np.pi / 180) * 111 * 111 * lat_cell_degree * lon_cell_degree

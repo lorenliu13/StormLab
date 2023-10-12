@@ -11,7 +11,6 @@ if __name__ == "__main__":
 
     year_list = np.arange(1979, 2022)
 
-    # variable_list = ['mean_total_precipitation_rate', 'total_column_water_vapour', 'vertical_integral_of_water_vapour_flux']
     variable_list = ["850_u_component_of_wind", "850_v_component_of_wind"]
 
     era5_lon = np.linspace(-114, -78, 145)

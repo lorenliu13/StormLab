@@ -24,7 +24,6 @@ def fit_regression_v2(obs_prcp, covars, p_clim, initguess=False, constrain=False
     al1al2 = [0.01, zeromean / p_clim[0]]  # set up initial guess for alpha1 and alpha2
 
     # define an objective function, which is to minimize the difference between
-    # zeromean and the distribution mean (?)
     def estimal1al2(params, zeromean, climmean):
         return np.power(zeromean - climmean / params[0] * np.log(1. + params[1] * (np.exp(params[0]) - 1.)), 2)
 
