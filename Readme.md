@@ -68,6 +68,8 @@ Required packages are listed in requirements.txt
 	- Generate stochastic rainstorm fields
 	  
 		`python src/cesm2_random_storms/random_rainfall_simulation/rainstorm_rainfall_simulation.py`
+	
+6. The other codes requires a complete dataset to process and are not shown as examples here.
 
 ## Code details:
 The detailed code structure and functions are as follows: 
