@@ -183,78 +183,65 @@ def attach_prcp(track_array, prcp_array):
     return prcp_label_array
 
 
-
 if __name__ == "__main__":
 
-    ensemble_year = 1251
-    # ensemble_id = 12
-    # ensemble_ids = np.arange(11, 21)
-    ensemble_ids = np.arange(16, 21)
+    # Specify the directory where the processed data will be saved.
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    for ensemble_id in ensemble_ids: # Loop through ensemble members
-        print("Start ensemble_id {0}".format(ensemble_id))
-        year_list = np.arange(1950, 2051)
-        # year_list = np.arange(2016, 2017)
+    # Navigate to the desired save folder relative to the script's directory
+    save_folder = os.path.join(script_dir, '../../../output/cesm2_tracking')
+    create_folder(save_folder)
+    cesm_folder = os.path.join(script_dir, '../../../data/cesm2/bias_corrected_annual_cesm2/1251_18/2022')
 
-        # year_list = [2020]
-        for year in year_list:
-            # save location
-            save_folder = r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour_tracking_bs" + "/" + "{0}_{1}".format(ensemble_year, ensemble_id)
+    year_list = [2022]
+    for year in year_list:
 
-            # load 3-hour ERA5 integrated water vapour flux (IVT) data with dimension (time, lat, lon)
-            # ivt_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour/{0}_{1}/{2}".format(ensemble_year, ensemble_id, year) + "/" + "CESM2_ivt_{0}.nc".format(year))
-            ivt_xarray = xr.open_dataset(
-                r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour_bias_correction/bias_corrected_series/{0}_{1}/{2}".format(ensemble_year,
-                                                                                                   ensemble_id,
-                                                                                                   year) + "/" + "CESM2_{0}_ivt_bs.nc".format(
-                    year))
-            ivt_array = ivt_xarray['ivt'].data
+        # load 3-hour CESM2 integrated water vapour flux (IVT) data with dimension (time, lat, lon)
+        ivt_xarray = xr.open_dataset(cesm_folder + "/" + "CESM2_{0}_ivt_bs.nc".format(year))
+        ivt_array = ivt_xarray['ivt'].data
 
-            # set up idnetification and tracking parameters
-            morph_radius = 1 # 0.25 degree for 4, 1.25 degree for 1
-            high_threshold = 500
-            low_threshold = 250
-            expand_distance = 5
+        # set up idnetification and tracking parameters
+        morph_radius = 1 # 0.25 degree for 4, 1.25 degree for 1
+        high_threshold = 500
+        low_threshold = 250
+        expand_distance = 5
 
-            # create an empty array
-            identification_array = np.zeros(ivt_array.shape)
-            print("Start AR identification in {0}".format(year))
-            # for each time step, perform ar identification on the IVT field
-            for time_index in range(ivt_array.shape[0]):
-                ivt_data = ivt_array[time_index, :, :]
-                grown_label_array = ivt_identification(ivt_data, morph_radius, high_threshold, low_threshold, expand_distance)
-                # relabel
-                grown_label_array = relabel_sequential(grown_label_array)[0]
-                # update empty array
-                identification_array[time_index] = grown_label_array
+        # create an empty array
+        identification_array = np.zeros(ivt_array.shape)
+        print("Start AR identification in {0}".format(year))
+        # for each time step, perform ar identification on the IVT field
+        for time_index in range(ivt_array.shape[0]):
+            ivt_data = ivt_array[time_index, :, :]
+            grown_label_array = ivt_identification(ivt_data, morph_radius, high_threshold, low_threshold, expand_distance)
+            # relabel
+            grown_label_array = relabel_sequential(grown_label_array)[0]
+            # update empty array
+            identification_array[time_index] = grown_label_array
 
-            # save the identified array
-            identification_array = identification_array.astype('int')
-            # create folder
-            create_folder(save_folder)
-            np.save(save_folder + "/" + "{0}_identification.npy".format(year), identification_array)
+        # save the identified array
+        identification_array = identification_array.astype('int')
 
-            # load storm identification array
-            # identification_array = np.load(save_folder + "/" + "{0}_identification.npy".format(year))
+        np.save(save_folder + "/" + "{0}_identification.npy".format(year), identification_array)
 
-            # run ar tracking code
-            print("Start AR tracking in {0}".format(year))
-            track_array = track(identification_array, ratio_threshold=0.2, dry_spell_time=0)
+        # load storm identification array
+        # identification_array = np.load(save_folder + "/" + "{0}_identification.npy".format(year))
 
-            # change the data type to int
-            track_array = track_array.astype('int')
-            # save tracking array
-            np.save(save_folder + "/" + "{0}_tracking.npy".format(year), track_array)
+        # run ar tracking code
+        print("Start AR tracking in {0}".format(year))
+        track_array = track(identification_array, ratio_threshold=0.2, dry_spell_time=0)
 
-            # load 3-hour ERA5 precipitation data
-            # prcp_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour/{0}_{1}/{2}".format(ensemble_year, ensemble_id, year) + "/" + "CESM2_prect_{0}.nc".format(year))
-            prcp_xarray = xr.open_dataset(
-                r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour_bias_correction/bias_corrected_series/{0}_{1}/{2}".format(ensemble_year,
-                                                                                                   ensemble_id,
-                                                                                                   year) + "/" + "CESM2_{0}_prect_bs.nc".format(
-                    year))
-            prcp_array = prcp_xarray['prect'].data # default unit: mm
+        # change the data type to int
+        track_array = track_array.astype('int')
+        # save tracking array
+        np.save(save_folder + "/" + "{0}_tracking.npy".format(year), track_array)
 
-            # attach associated precipitation event to each ar event
-            prcp_label_array = attach_prcp(track_array, prcp_array)
-            np.save(save_folder + "/" + "{0}_attached_prcp.npy".format(year), prcp_label_array)
+        # load 3-hour ERA5 precipitation data
+        # prcp_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour/{0}_{1}/{2}".format(ensemble_year, ensemble_id, year) + "/" + "CESM2_prect_{0}.nc".format(year))
+        prcp_xarray = xr.open_dataset(
+            cesm_folder + "/" + "CESM2_{0}_prect_bs.nc".format(year))
+        prcp_array = prcp_xarray['prect'].data # default unit: mm
+
+        # attach associated precipitation event to each ar event
+        prcp_label_array = attach_prcp(track_array, prcp_array)
+        np.save(save_folder + "/" + "{0}_attached_prcp.npy".format(year), prcp_label_array)

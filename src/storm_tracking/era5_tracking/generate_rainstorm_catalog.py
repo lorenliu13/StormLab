@@ -5,14 +5,9 @@
 
 import xarray as xr
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import math
-from scipy.interpolate import interp1d
 from pyproj import Transformer
-# from AR_trajectory_pan import ar_trajectory
-from tqdm import tqdm
-import multiprocessing
+import os
 
 
 # compute the IVT weighted centroid
@@ -48,20 +43,32 @@ def remove_leading_trailing_zeros(vec):
 
     return first_non_zero, len(vec) - last_non_zero
 
-# variables:
-# 1. Duration (hours):
-# 2. Area (sqkm)
-# 3. Intense area (IVT > 750 kg/m/s, sqkm)
-# 4. IVT intensity (area weighted, kg/m/s)
-# 5. Length of the trajectory (km)
-# 6. Width = Area / Length (km)
-# 7. Sum of the turning angles (degree)
-# 8. Speed
 
-def ar_catalog_generation(task:dict):
+def create_folder(folder_name):
+    try:
+        # Create the folder
+        os.makedirs(folder_name)
+    except OSError:
+        # If the folder already exists, ignore the error
 
-    # extract the year
-    year = task['year']
+        pass
+
+if __name__ == "__main__":
+
+
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Navigate to the desired load folder relative to the script's directory
+    # Folder for ERA5 data at CESM2 resolution
+    era_data_folder = os.path.join(script_dir, '../../../data/era5/regridded_annual_era5')
+    # Folder for storm tracking results
+    era_tracking_folder = os.path.join(script_dir, '../../../data/era5/era5_tracking')
+    # Save folder
+    save_folder = os.path.join(script_dir, '../../../output/era5_rainstorm_catalog')
+    create_folder(save_folder)
+
+    year = 2020
 
     print("Start creating ar catalog for {0}".format(year))
     # set up the time interval for the data, which is 3 hours
@@ -69,27 +76,24 @@ def ar_catalog_generation(task:dict):
     # load a time step data
     # load ERA5 precipitation data
     prcp_xarray = xr.open_dataset(
-        r"/home/yliu2232/miss_design_storm/raw_data/ERA5/ERA5_6h/{0}".format(year) + "/" + "ERA5_6H_mean_total_precipitation_rate_{0}_cesm_res.nc".format(
+        era_data_folder + "/" + "ERA5_6H_mean_total_precipitation_rate_{0}_cesm_res.nc".format(
             year))
     # get the time step
     time_step = prcp_xarray['time'].data
     # load mississippi basin boundary
-    # miss_boundary = np.load(r"/home/yliu2232/code/miss_design_storm/ncg_sbasin_boundary/era5" + "/" + "miss_basin_era5.npy")
     miss_boundary = np.load(
-        r"/home/yliu2232/code/miss_design_storm/ncg_sbasin_boundary/cesm2" + "/" + "cesm2_miss_boundary.npy")
+        era_data_folder + "/" + "cesm2_miss_boundary.npy")
 
-    track_array = np.load(r"/home/yliu2232/miss_design_storm/6h_tracking_cesm_res" + "/" + "{0}_tracking.npy".format(year))
+    track_array = np.load(
+        era_tracking_folder + "/" + "{0}_tracking.npy".format(year))
     attach_prcp = np.load(
-        r"/home/yliu2232/miss_design_storm/6h_tracking_cesm_res" + "/" + "{0}_attached_prcp.npy".format(year))
-    ivt_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/raw_data/ERA5/ERA5_6h/{0}".format(
-        year) + "/" + "ERA5_6H_vertical_integral_of_water_vapour_flux_{0}_cesm_res.nc".format(year))
-    tcwv_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/raw_data/ERA5/ERA5_6h/{0}".format(
-        year) + "/" + "ERA5_6H_total_column_water_vapour_{0}_cesm_res.nc".format(year))
-
+        era_tracking_folder + "/" + "{0}_attached_prcp.npy".format(year))
+    ivt_xarray = xr.open_dataset(era_data_folder + "/" + "ERA5_6H_vertical_integral_of_water_vapour_flux_{0}_cesm_res.nc".format(year))
+    tcwv_xarray = xr.open_dataset(era_data_folder + "/" + "ERA5_6H_total_column_water_vapour_{0}_cesm_res.nc".format(year))
 
     prcp_array = prcp_xarray['mtpr'].data * 3600  # convert unit to mm/hour
     ivt_array = ivt_xarray['q'].data  # unit: kg/m/s
-    tcwv_array = tcwv_xarray['tcwv'].data # unit: mm
+    tcwv_array = tcwv_xarray['tcwv'].data  # unit: mm
 
     # for each storm id, compute storm information
     storm_labels = np.unique(track_array)
@@ -188,7 +192,6 @@ def ar_catalog_generation(task:dict):
             curr_ar_area = ar_area_array[time_index]
             curr_storm_area = storm_area_array[time_index]
 
-
             avg_ivt, _ = compute_weighted_average(curr_ivt_array, pixel_area)
             avg_prcp, _ = compute_weighted_average(curr_prcp_array, pixel_area)
             avg_tcwv, _ = compute_weighted_average(curr_tcwv_array, pixel_area)
@@ -245,7 +248,6 @@ def ar_catalog_generation(task:dict):
             record['prcp_area(sqkm)'] = curr_storm_area
             record['intense_ivt_area(sqkm)'] = intense_ivt_area
 
-
             # ivt intensity
             record['avg_ivt_intensity(kg/m/s)'] = avg_ivt
             record['avg_ivt_high_intensity(kg/m/s)'] = avg_intense_ivt
@@ -268,7 +270,6 @@ def ar_catalog_generation(task:dict):
             # append to the full dataframe
             ar_event_df = ar_event_df.append(record_df, ignore_index=True)
 
-
         # Get the computed precipitation area over the mississippi basin
         miss_area_list = ar_event_df['miss_avg_prcp_area(sqkm)'].values
         # print(miss_area_list)
@@ -280,7 +281,8 @@ def ar_catalog_generation(task:dict):
         # adjust the dataframe based on new range
         ar_event_df = ar_event_df.iloc[first_non_zero_index:last_non_zero_index]
         # assign new duration
-        ar_event_df['duration(hour)'] = np.ones(ar_event_df.shape[0]) * ar_event_df.shape[0] * time_interval # length of data times time interval
+        ar_event_df['duration(hour)'] = np.ones(ar_event_df.shape[0]) * ar_event_df.shape[
+            0] * time_interval  # length of data times time interval
 
         # check the duration should be greater than 24 hours, skip the event
         if ar_event_df.shape[0] * time_interval < 24:
@@ -290,37 +292,10 @@ def ar_catalog_generation(task:dict):
         full_data_frame = full_data_frame.append(ar_event_df, ignore_index=True)
 
     # save to csv
-    full_data_frame.to_csv(r"/home/yliu2232/miss_design_storm/6h_tracking_cesm_res/6h_ar_catalog" + "/" + "{0}_catalog.csv".format(year),
-                           index=False)
+    full_data_frame.to_csv(
+        save_folder + "/" + "{0}_catalog.csv".format(year),
+        index=False)
 
-
-
-# creat a task, whcih is a dictionary containing year information
-def create_task(year:int):
-    task = {"year": year}
-    return task
-
-
-def main():
-    # The main code to do multiple processing
-
-    year_list = np.arange(1979, 2022)
-    task_list = []
-    for year in year_list:
-        task = create_task(year) # create the task
-        task_list.append(task) # append the task into list
-
-    # Use time processes at the same time
-    pool = multiprocessing.Pool(processes = 10)
-    pool.map(ar_catalog_generation, task_list)
-
-    print("All task is finished.")
-
-
-
-if __name__ == "__main__":
-
-    main()
 
 
 

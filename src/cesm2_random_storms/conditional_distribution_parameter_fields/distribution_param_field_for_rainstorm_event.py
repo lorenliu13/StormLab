@@ -103,25 +103,41 @@ def expand_cesm_grid_to_aorc(mtpr_array, cesm_grid_reference_array):
     return expanded_mtpr_array
 
 
-def generate_CSGD_param_field(ar_id):
+
+if __name__ == "__main__":
+
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Navigate to the desired save folder relative to the script's directory
+    save_folder = os.path.join(script_dir, '../../../output/cesm2_rainstorms_distr_params')
+    create_folder(save_folder)
+
+    # Navigate to the desired load folder relative to the script's directory
+    distr_param_coeff_folder = os.path.join(script_dir, '../../../data/era5/parameter_coeff_fields')
+    cesm_rainstorm_folder = os.path.join(script_dir, '../../../data/cesm2/cesm2_rainstorm_covariates')
+
+
+    # read argument input
+    ar_id = 202200018
 
     # get coefficients
     # if the coefficient is -9999, that means no data available here, so replace it with np.nan
-    alpha_1_array = replace_with_nan(np.load("alpha_1_array.npy"))
-    alpha_2_array = replace_with_nan(np.load("alpha_2_array.npy"))
+    alpha_1_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "alpha_1_array.npy"))
+    alpha_2_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "alpha_2_array.npy"))
     # alpha_3_array = replace_with_nan(np.load(save_folder + "/" + "alpha_3_array.npy")) sigma coefficient is not used
-    alpha_3_array = np.zeros((630, 1024)) # currently there is no alpha 3 array
-    alpha_4_array = replace_with_nan(np.load("alpha_4_array.npy"))
-    alpha_5_array = replace_with_nan(np.load("alpha_5_array.npy"))
+    alpha_3_array = np.zeros((630, 1024))  # currently there is no alpha 3 array
+    alpha_4_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "alpha_4_array.npy"))
+    alpha_5_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "alpha_5_array.npy"))
 
-    mu_clim_array = replace_with_nan(np.load("mu_clim_array.npy"))
-    sigma_clim_array = replace_with_nan(np.load("sigma_clim_array.npy"))
-    gg_c_array = replace_with_nan(np.load("gg_c_array.npy"))
+    mu_clim_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "mu_clim_array.npy"))
+    sigma_clim_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "sigma_clim_array.npy"))
+    gg_c_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "gg_c_array.npy"))
 
     # load logistic regression coefficients
-    logit_intercept_array = replace_with_nan(np.load("logit_intercept_array.npy"))
-    logit_mtpr_array = replace_with_nan(np.load("logit_mtpr_array.npy"))
-    logit_tcwv_array = replace_with_nan(np.load("logit_tcwv_array.npy"))
+    logit_intercept_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "logit_intercept_array.npy"))
+    logit_mtpr_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "logit_mtpr_array.npy"))
+    logit_tcwv_array = replace_with_nan(np.load(distr_param_coeff_folder + "/" + "logit_tcwv_array.npy"))
 
     # set up AORC coordinates
     aorc_lat = np.linspace(50, 29, 630)
@@ -136,8 +152,8 @@ def generate_CSGD_param_field(ar_id):
     print("AR id: {0}".format(ar_id))
 
     # load the aorc and era5 covariate xarray data for the ar event
-    mtpr_xarray = xr.load_dataset("{0}_prect_cesm_res.nc".format(ar_id))
-    tcwv_xarray = xr.load_dataset("{0}_tmq_cesm_res.nc".format(ar_id))
+    mtpr_xarray = xr.load_dataset(cesm_rainstorm_folder + "/" + "{0}_prect_cesm_res.nc".format(ar_id))
+    tcwv_xarray = xr.load_dataset(cesm_rainstorm_folder + "/" + "{0}_tmq_cesm_res.nc".format(ar_id))
 
     # get time steps
     ar_time_stamps = mtpr_xarray['time'].data
@@ -156,10 +172,9 @@ def generate_CSGD_param_field(ar_id):
     # create empty array to save data
     full_scipy_a_array = []
     full_scipy_scale_array = []
-    full_wet_p_array = [] # compute the probability of dry
+    full_wet_p_array = []  # compute the probability of dry
 
     for time_index in range(high_res_mtpr_array.shape[0]):
-
         # get current mtpr array
         curr_mtpr_array = high_res_mtpr_array[time_index]
         curr_tcwv_array = high_res_tcwv_array[time_index]
@@ -179,7 +194,7 @@ def generate_CSGD_param_field(ar_id):
 
         # compute the wet probability
         eta_array = logit_intercept_array + logit_mtpr_array * curr_mtpr_array + logit_tcwv_array * curr_tcwv_array
-        wet_p_array = 1 / (1 + np.exp((-1.0)*eta_array))
+        wet_p_array = 1 / (1 + np.exp((-1.0) * eta_array))
 
         full_scipy_a_array.append(a)
         full_scipy_scale_array.append(scale)
@@ -187,7 +202,6 @@ def generate_CSGD_param_field(ar_id):
 
     full_scipy_a_array = np.array(full_scipy_a_array)
     full_scipy_scale_array = np.array(full_scipy_scale_array)
-
 
     # Create the dataset for scipy a parameter
     scipy_a_ds = xr.Dataset(
@@ -201,9 +215,8 @@ def generate_CSGD_param_field(ar_id):
             ar_id)}
     )
     # save the dataset
-    scipy_a_ds.to_netcdf("{0}_scipy_a.nc".format(ar_id),
-                 encoding={"aorc": {"dtype": "float32", "zlib": True}})
-
+    scipy_a_ds.to_netcdf(save_folder + "/" + "{0}_scipy_a.nc".format(ar_id),
+                         encoding={"aorc": {"dtype": "float32", "zlib": True}})
 
     # Create the dataset for scipy scale parameter
     scipy_scale_ds = xr.Dataset(
@@ -217,9 +230,8 @@ def generate_CSGD_param_field(ar_id):
             ar_id)}
     )
     # save the dataset
-    scipy_scale_ds.to_netcdf("{0}_scipy_scale.nc".format(ar_id),
-                 encoding={"aorc": {"dtype": "float32", "zlib": True}})
-
+    scipy_scale_ds.to_netcdf(save_folder + "/" + "{0}_scipy_scale.nc".format(ar_id),
+                             encoding={"aorc": {"dtype": "float32", "zlib": True}})
 
     # Create the dataset for scipy c parameter
     scipy_c_ds = xr.Dataset(
@@ -233,8 +245,8 @@ def generate_CSGD_param_field(ar_id):
             ar_id)}
     )
     # save the dataset
-    scipy_c_ds.to_netcdf("{0}_scipy_c.nc".format(ar_id),
-                             encoding={"aorc": {"dtype": "float32", "zlib": True}})
+    scipy_c_ds.to_netcdf(save_folder + "/" + "{0}_scipy_c.nc".format(ar_id),
+                         encoding={"aorc": {"dtype": "float32", "zlib": True}})
 
     # create dataset for dry probability
     logit_wet_p_ds = xr.Dataset(
@@ -248,14 +260,5 @@ def generate_CSGD_param_field(ar_id):
             ar_id)}
     )
     # save the dataset
-    logit_wet_p_ds.to_netcdf("{0}_logit_wet_p.nc".format(ar_id),
+    logit_wet_p_ds.to_netcdf(save_folder + "/" + "{0}_logit_wet_p.nc".format(ar_id),
                              encoding={"aorc": {"dtype": "float32", "zlib": True}})
-
-
-
-if __name__ == "__main__":
-
-    # read argument input
-    ar_id = 202200018
-
-    generate_CSGD_param_field(ar_id)

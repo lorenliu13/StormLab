@@ -12,6 +12,7 @@ from skimage import draw
 import skimage
 import xarray as xr
 from tracking_ar import track
+import os
 
 
 def perform_connected_components(to_be_connected: np.ndarray,
@@ -171,22 +172,38 @@ def attach_prcp(track_array, prcp_array):
 
     return prcp_label_array
 
+def create_folder(folder_name):
+    try:
+        # Create the folder
+        os.makedirs(folder_name)
+    except OSError:
+        # If the folder already exists, ignore the error
 
+        pass
 
 if __name__ == "__main__":
 
+    # Specify the directory where the processed data will be saved.
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Navigate to the desired save folder relative to the script's directory
+    save_folder = os.path.join(script_dir, '../../../output/era5_tracking')
+    era_folder = os.path.join(script_dir, '../../../data/era5/regridded_annual_era5')
+
+    # Create save folder
+    create_folder(save_folder)
+
     # Define a list of years from 1979 to 2021.
-    year_list = np.arange(1979, 2022)
-    # year_list = [2020]
+    # year_list = np.arange(1979, 2022)
+    year_list = [2020]
 
     for year in year_list:
-        # Specify the directory where the processed data will be saved.
-        save_folder = r"/home/yliu2232/miss_design_storm/6h_tracking_cesm_res"
+
 
         # Load 3-hourly ERA5 integrated water vapour flux (IVT) data for the current year.
         # Data dimensions are expected to be (time, lat, lon).
-        ivt_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/raw_data/ERA5/ERA5_6h" + "/" + str(
-            year) + "/" + "ERA5_6H_vertical_integral_of_water_vapour_flux_{0}_cesm_res.nc".format(year))
+        ivt_xarray = xr.open_dataset(era_folder + "/" + "ERA5_6H_vertical_integral_of_water_vapour_flux_{0}_cesm_res.nc".format(year))
         ivt_array = ivt_xarray['q'].data
 
         # Set up identification and tracking parameters
@@ -225,8 +242,7 @@ if __name__ == "__main__":
         np.save(save_folder + "/" + "{0}_tracking.npy".format(year), track_array)
 
         # Load 3-hourly ERA5 precipitation data for the current year.
-        prcp_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/raw_data/ERA5/ERA5_6h" + "/" + str(
-            year) + "/" + "ERA5_6H_mean_total_precipitation_rate_{0}_cesm_res.nc".format(year))
+        prcp_xarray = xr.open_dataset(era_folder + "/" + "ERA5_6H_mean_total_precipitation_rate_{0}_cesm_res.nc".format(year))
         prcp_array = prcp_xarray['mtpr'].data * 3600  # convert it to mm/hour
 
         # Associate each tracked AR event with its corresponding precipitation event.

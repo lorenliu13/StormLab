@@ -4,31 +4,47 @@
 
 
 import xarray as xr
-from scipy.special import erf
+import os
 import scipy.stats as st
 import numpy as np
-import sys
 
-# year = 2020
-# ar_id = 202000345
-# realization = 1
+
+def create_folder(folder_name):
+    try:
+        # Create the folder
+        os.makedirs(folder_name)
+    except OSError:
+        # If the folder already exists, ignore the error
+        pass
+
 
 if __name__ == "__main__":
+
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Navigate to the desired save folder relative to the script's directory
+    save_folder = os.path.join(script_dir, '../../../output/cesm2_rainstorm_simulation')
+    create_folder(save_folder)
+
+    # Navigate to the desired load folder relative to the script's directory
+    cesm_rainstorm_distr_param_folder = os.path.join(script_dir, '../../../data/cesm2/cesm2_rainstorms_distr_params')
+    cesm_rainstorm_noise_folder = os.path.join(script_dir, '../../../data/cesm2/cesm2_rainstorm_simulation')
 
     # read argument input
     ar_id = 202200018
     realization = 1
 
     # load noise field realization
-    noise_xarray = xr.load_dataset("{0}_{1}_noise.nc".format(ar_id, realization))
+    noise_xarray = xr.load_dataset(cesm_rainstorm_noise_folder + "/" + "{0}_{1}_noise.nc".format(ar_id, realization))
 
 
     # load rainfall probability
-    logic_mu_xarray = xr.load_dataset("{0}_logit_wet_p.nc".format(ar_id))
+    logic_mu_xarray = xr.load_dataset(cesm_rainstorm_distr_param_folder + "/" + "{0}_logit_wet_p.nc".format(ar_id))
     # load scipy parameters
-    scipy_a_xarray = xr.load_dataset("{0}_scipy_a.nc".format(ar_id))
-    scipy_gg_c_xarray = xr.load_dataset("{0}_scipy_c.nc".format(ar_id))
-    scipy_scale_xarray = xr.load_dataset("{0}_scipy_scale.nc".format(ar_id))
+    scipy_a_xarray = xr.load_dataset(cesm_rainstorm_distr_param_folder + "/" + "{0}_scipy_a.nc".format(ar_id))
+    scipy_gg_c_xarray = xr.load_dataset(cesm_rainstorm_distr_param_folder + "/" + "{0}_scipy_c.nc".format(ar_id))
+    scipy_scale_xarray = xr.load_dataset(cesm_rainstorm_distr_param_folder + "/" + "{0}_scipy_scale.nc".format(ar_id))
     # scipy_loc_xarray = xr.load_dataset("{0}_scipy_loc.nc".format(ar_id))
 
     # get the noise array
@@ -97,7 +113,7 @@ if __name__ == "__main__":
         sim_rainfall_array[time_index, :, :] = rainfall_array
 
     # print the number of nan values
-    print("The number of nan: {0}".format(np.sum(np.isnan(sim_rainfall_array))))
+    # print("The number of nan: {0}".format(np.sum(np.isnan(sim_rainfall_array))))
 
     # set up AORC coordinates
     aorc_lat = np.linspace(50, 29, 630)
@@ -118,4 +134,4 @@ if __name__ == "__main__":
     )
 
     # save the dataset
-    rainfall_ds.to_netcdf("{0}_{1}_sim_rainfall.nc".format(ar_id, realization), encoding={"aorc": {"dtype": "float32", "zlib": True}})
+    rainfall_ds.to_netcdf(save_folder + "/" + "{0}_{1}_sim_rainfall.nc".format(ar_id, realization), encoding={"aorc": {"dtype": "float32", "zlib": True}})

@@ -1,0 +1,12 @@
+# Ignore all .log files
+*.log
+
+# Ignore the data nad output direcotry
+data/
+output/
+
+# Ignore the .env file
+.env
+
+# Ignore the .npy file
+.npy

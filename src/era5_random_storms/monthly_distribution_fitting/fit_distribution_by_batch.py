@@ -7,10 +7,19 @@
 import pandas as pd
 import scipy.stats as st
 import numpy as np
-import sys
+import os
 from CSGD_hybrid import fit_regression_v2
-# from tqdm import tqdm
 from sklearn.linear_model import LogisticRegression
+
+
+def create_folder(folder_name):
+    try:
+        # Create the folder
+        os.makedirs(folder_name)
+    except OSError:
+        # If the folder already exists, ignore the error
+
+        pass
 
 
 def fit_csgd_hybrid_distribution(training_df, var_name, mu_fix, sigma_fix):
@@ -106,11 +115,27 @@ def logistic_regression(training_df):
 
 if __name__ == "__main__":
 
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Navigate to the desired save folder relative to the script's directory
+    save_folder = os.path.join(script_dir, '../../../output/era5_fitted_distribution_params')
+    create_folder(save_folder)
+
+    # Navigate to the desired load folder relative to the script's directory
+    era_df_folder = os.path.join(script_dir, '../../../data/era5/fitting_dataframe')
+
+
     # local testing:
-    batch_index = 95
-    aorc_df = pd.read_csv(r"/home/yliu2232/miss_design_storm/aorc_grid_fitting/aorc_grid_training_df_0328/12/{0}".format(batch_index) + "/" + "{0}_aorc.csv".format(batch_index))
-    mtpr_df = pd.read_csv(r"/home/yliu2232/miss_design_storm/aorc_grid_fitting/aorc_grid_training_df_0328/12/{0}".format(batch_index) + "/" + "{0}_mtpr.csv".format(batch_index))
-    tcwv_df = pd.read_csv(r"/home/yliu2232/miss_design_storm/aorc_grid_fitting/aorc_grid_training_df_0328/12/{0}".format(batch_index) + "/" + "{0}_tcwv.csv".format(batch_index))
+    batch_index = 1
+    aorc_df = pd.read_csv(era_df_folder + "/" + "{0}".format(batch_index) + "/" + "{0}_aorc.csv".format(batch_index))
+    mtpr_df = pd.read_csv(era_df_folder + "/" + "{0}".format(batch_index) + "/" + "{0}_mtpr.csv".format(batch_index))
+    tcwv_df = pd.read_csv(era_df_folder + "/" + "{0}".format(batch_index) + "/" + "{0}_tcwv.csv".format(batch_index))
+
+    # set the variable name for large-scale atmospheric variables
+    var_name = ['mean_total_precipitation_rate', 'total_column_water_vapour']
+    mu_fix = False # the mean is varying with time
+    sigma_fix = True # the standard deviation is fixed
 
     # get the columns as grid index s
     grid_index_list = aorc_df.columns
@@ -118,8 +143,9 @@ if __name__ == "__main__":
     # create a full dataframe
     batch_grid_df = pd.DataFrame()
 
-    # for each grid
-    for grid_index in grid_index_list:
+    ######################### IMPORTANT: this example only runs 10 grids to save time! #################################
+    for grid_index in grid_index_list[0:10]:
+    # Not run: for grid_index in grid_index_list:
 
         # create the training dataframe
         training_df = pd.DataFrame()
@@ -144,4 +170,4 @@ if __name__ == "__main__":
         batch_grid_df = batch_grid_df.append(single_grid_df, ignore_index=True)
 
     # save the fit_param_df
-    batch_grid_df.to_csv("csgd_param_{0}.csv".format(batch_index), index=False)
+    batch_grid_df.to_csv(save_folder + "/" + "distr_param_batch_{0}.csv".format(batch_index), index=False)

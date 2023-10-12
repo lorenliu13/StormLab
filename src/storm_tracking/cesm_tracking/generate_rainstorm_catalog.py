@@ -59,62 +59,44 @@ def remove_leading_trailing_zeros(vec):
 
     return first_non_zero, len(vec) - last_non_zero
 
-# variables:
-# 1. Duration (hours):
-# 2. Area (sqkm)
-# 3. Intense area (IVT > 750 kg/m/s, sqkm)
-# 4. IVT intensity (area weighted, kg/m/s)
-# 5. Length of the trajectory (km)
-# 6. Width = Area / Length (km)
-# 7. Sum of the turning angles (degree)
-# 8. Speed
 
-def ar_catalog_generation(task:dict):
+if __name__ == "__main__":
 
-    # extract the year
-    ensemble_year = task['ensemble_year']
-    ensemble_id = task['ensemble_id']
-    year = task['year']
+    # Specify the directory where the processed data will be saved.
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
+    # Navigate to the desired save folder relative to the script's directory
+    cesm_folder = os.path.join(script_dir, '../../../data/cesm2/bias_corrected_annual_cesm2/1251_18/2022')
+    cesm_track_folder = os.path.join(script_dir, '../../../data/cesm2/cesm2_tracking')
+
+    save_folder = os.path.join(script_dir, '../../../output/cesm2_rainstorm_catalog')
+    create_folder(save_folder)
+
+
+    year = 2022
 
     print("Start creating ar catalog for {0}".format(year))
     # set up the time interval for the data, which is 3 hours
     time_interval = 6
     # load a time step data
     # load ERA5 precipitation data
-    # prcp_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour/{0}_{1}/{2}".format(ensemble_year, ensemble_id, year) + "/" + "CESM2_prect_{0}.nc".format(year))
-    prcp_xarray = xr.open_dataset(
-        r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour_bias_correction/bias_corrected_series/{0}_{1}/{2}".format(
-            ensemble_year,
-            ensemble_id,
-            year) + "/" + "CESM2_{0}_prect_bs.nc".format(
-            year))
+    prcp_xarray = xr.open_dataset(cesm_folder + "/" + "CESM2_{0}_prect_bs.nc".format(year))
 
     # get the time step
     time_step = prcp_xarray['time'].data
     # load mississippi basin boundary
-    miss_boundary = np.load(r"/home/yliu2232/code/miss_design_storm/ncg_sbasin_boundary/cesm2" + "/" + "cesm2_miss_boundary.npy")
+    miss_boundary = np.load(cesm_folder + "/" + "cesm2_miss_boundary.npy")
 
-    save_folder = r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour_tracking_bs/{0}_{1}".format(ensemble_year, ensemble_id)
-    track_array = np.load(save_folder + "/" + "{0}_tracking.npy".format(year))
-    attach_prcp = np.load(save_folder + "/" + "{0}_attached_prcp.npy".format(year))
+    track_array = np.load(cesm_track_folder + "/" + "{0}_tracking.npy".format(year))
+    attach_prcp = np.load(cesm_track_folder + "/" + "{0}_attached_prcp.npy".format(year))
     # ivt_xarray = xr.open_dataset(r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour/{0}_{1}/{2}".format(ensemble_year, ensemble_id, year) + "/" + "CESM2_ivt_{0}.nc".format(year))
-    ivt_xarray = xr.open_dataset(
-        r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour_bias_correction/bias_corrected_series/{0}_{1}/{2}".format(
-            ensemble_year,
-            ensemble_id,
-            year) + "/" + "CESM2_{0}_ivt_bs.nc".format(
-            year))
-    tcwv_xarray = xr.open_dataset(
-        r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour_bias_correction/bias_corrected_series/{0}_{1}/{2}".format(
-            ensemble_year,
-            ensemble_id,
-            year) + "/" + "CESM2_{0}_tmq_bs.nc".format(
-            year))
+    ivt_xarray = xr.open_dataset(cesm_folder + "/" + "CESM2_{0}_ivt_bs.nc".format(year))
+    tcwv_xarray = xr.open_dataset(cesm_folder + "/" + "CESM2_{0}_tmq_bs.nc".format(year))
 
-    prcp_array = prcp_xarray['prect'].data # unit: mm
+    prcp_array = prcp_xarray['prect'].data  # unit: mm
     ivt_array = ivt_xarray['ivt'].data  # unit: kg/m/s
-    tcwv_array = tcwv_xarray['tmq'].data # unit: mm
+    tcwv_array = tcwv_xarray['tmq'].data  # unit: mm
 
     # for each storm id, compute storm information
     storm_labels = np.unique(track_array)
@@ -156,21 +138,14 @@ def ar_catalog_generation(task:dict):
         # get the number of pixels of storm at each time step
         pixels_num = np.sum(np.isin(track_array, storm_label), axis=(1, 2))
 
-        # initial selection
-        # if the duration is less than 48 hours, remove it
-        # print("Duration is {0}".format(np.sum(pixels_num != 0) * time_interval))
-        # if np.sum(pixels_num != 0) * time_interval < 48:
-        #
-        #     print("AR duration is less than 48 hours, removed.")
-        #     continue
-
         # extract the storm time sequence
         ar_track_array = track_array[pixels_num != 0]
         prcp_track_array = attach_prcp[pixels_num != 0]
 
         # Must have certain area over mississippi basin for some duration
-        prcp_area_array = np.sum(np.where((miss_boundary == 1) & (prcp_track_array == storm_label), 1, 0) * pixel_area,
-                                 axis=(1, 2))
+        prcp_area_array = np.sum(
+            np.where((miss_boundary == 1) & (prcp_track_array == storm_label), 1, 0) * pixel_area,
+            axis=(1, 2))
 
         if np.sum(prcp_area_array > (
                 total_miss_area * 0.1)) * time_interval < 24:  # about 10% of the Mississippi basin area
@@ -221,7 +196,6 @@ def ar_catalog_generation(task:dict):
             curr_ar_area = ar_area_array[time_index]
             curr_storm_area = storm_area_array[time_index]
 
-
             avg_ivt, _ = compute_weighted_average(curr_ivt_array, pixel_area)
             avg_prcp, _ = compute_weighted_average(curr_prcp_array, pixel_area)
             avg_tcwv, _ = compute_weighted_average(curr_tcwv_array, pixel_area)
@@ -233,10 +207,12 @@ def ar_catalog_generation(task:dict):
             # compute the area over misissippi
             miss_avg_ivt, miss_ivt_area = compute_weighted_average(np.where(miss_boundary == 1, curr_ivt_array, 0),
                                                                    pixel_area)
-            miss_avg_prcp, miss_prcp_area = compute_weighted_average(np.where(miss_boundary == 1, curr_prcp_array, 0),
-                                                                     pixel_area)
-            miss_avg_tcwv, miss_tcwv_area = compute_weighted_average(np.where(miss_boundary == 1, curr_tcwv_array, 0),
-                                                                     pixel_area)
+            miss_avg_prcp, miss_prcp_area = compute_weighted_average(
+                np.where(miss_boundary == 1, curr_prcp_array, 0),
+                pixel_area)
+            miss_avg_tcwv, miss_tcwv_area = compute_weighted_average(
+                np.where(miss_boundary == 1, curr_tcwv_array, 0),
+                pixel_area)
 
             ivt_x_cent, ivt_y_cent = compute_weighted_centroid(curr_ivt_array, lon_array, lat_array)
             prcp_x_cent, prcp_y_cent = compute_weighted_centroid(curr_prcp_array, lon_array, lat_array)
@@ -311,7 +287,8 @@ def ar_catalog_generation(task:dict):
         # adjust the dataframe based on new range
         ar_event_df = ar_event_df.iloc[first_non_zero_index:last_non_zero_index]
         # assign new duration
-        ar_event_df['duration(hour)'] = np.ones(ar_event_df.shape[0]) * ar_event_df.shape[0] * time_interval # length of data times time interval
+        ar_event_df['duration(hour)'] = np.ones(ar_event_df.shape[0]) * ar_event_df.shape[
+            0] * time_interval  # length of data times time interval
 
         # check the duration should be greater than 24 hours, skip the event
         if ar_event_df.shape[0] * time_interval < 24:
@@ -320,47 +297,9 @@ def ar_catalog_generation(task:dict):
         # append it to the full dataframe
         full_data_frame = pd.concat([full_data_frame, ar_event_df], ignore_index=True)
 
-    catalog_save_folder = r"/home/yliu2232/miss_design_storm/processed_data/cesm2/6_hour_catalog_bs" + "/" + "{0}_{1}".format(ensemble_year, ensemble_id)
-    create_folder(catalog_save_folder)
     # save to csv
-    full_data_frame.to_csv(catalog_save_folder + "/" + "{0}_catalog.csv".format(year),
+    full_data_frame.to_csv(save_folder + "/" + "{0}_catalog.csv".format(year),
                            index=False)
-
-
-
-# creat a task, whcih is a dictionary containing year information
-def create_task(year:int, ensemble_year, ensemble_id):
-    task = {"year": year, 'ensemble_year': ensemble_year, 'ensemble_id': ensemble_id}
-    return task
-
-
-def main():
-    # The main code to do multiple processing
-
-    year_list = np.arange(1950, 2051)
-    # year_list = np.arange(2016, 2017)
-    ensemble_year_list = [1251]
-    # ensemble_id_list = np.arange(11, 21)
-    ensemble_id_list = [16, 17, 18, 19, 20]
-
-    task_list = []
-    for ensemble_year in ensemble_year_list:
-        for ensemble_id in ensemble_id_list:
-            for year in year_list:
-                task = create_task(year, ensemble_year, ensemble_id) # create the task
-                task_list.append(task) # append the task into list
-
-    # Use time processes at the same time
-    pool = multiprocessing.Pool(processes = 10)
-    pool.map(ar_catalog_generation, task_list)
-
-    print("All task is finished.")
-
-
-
-if __name__ == "__main__":
-
-    main()
 
 
 

@@ -213,13 +213,20 @@ def noise_generation(prcp_array, raw_cesm_prcp_array, u_array, v_array, lon_data
 
 
 if __name__ == "__main__":
-    ensemble_year = 1251
-    ensemble_id = 11
 
-    year = 2020
-    month = 12
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Navigate to the desired save folder relative to the script's directory
+    save_folder = os.path.join(script_dir, '../../../output/cesm2_rainstorm_simulation')
+    create_folder(save_folder)
+
+    # Navigate to the desired load folder relative to the script's directory
+    cesm_rainstorm_folder = os.path.join(script_dir, '../../../data/cesm2/cesm2_rainstorm_covariates')
+    match_aorc_rainfall_folder = os.path.join(script_dir, '../../../data/cesm2/matched_aorc_rainfall')
+
     realization = 1
-    ar_id = 202000306 # fixed ar id
+    ar_id = 202200018
 
     # use ar id to generate a series of random numbers
     # generate a seed field
@@ -231,29 +238,43 @@ if __name__ == "__main__":
     # get the seed for this realization
     seed = seed_list[realization]
 
-    print("Process ensemble_year {0} ensemble_id {1} year {2} month {3}".format(ensemble_year, ensemble_id, year, month))
+    # print("Process year {0} month {1}".format(year, month))
     print("AR id: {0}".format(ar_id))
     print("Random state: {0}".format(realization))
 
     # load precipitation data
-    raw_cesm_prcp_xarray = xr.load_dataset(
-        r"/home/yliu2232/miss_design_storm/cesm2_random_storms/cesm2_ar_covariate_field/{0}_{1}/{2}/{3}".format(ensemble_year, ensemble_id, year, ar_id) + "/" + "{0}_prect_cesm_res.nc".format(ar_id))
+    raw_cesm_prcp_xarray = xr.load_dataset(cesm_rainstorm_folder + "/" + "{0}_prect_cesm_res.nc".format(ar_id))
     raw_cesm_prcp_array = raw_cesm_prcp_xarray['prect'].data
 
+    # load precipitation data
+    aorc_array = np.load(match_aorc_rainfall_folder + "/" + "{0}_sr_rainfall.npy".format(ar_id))
     # load wind data
-    u_xarray = xr.load_dataset(
-        r"/home/yliu2232/miss_design_storm/cesm2_random_storms/cesm2_ar_covariate_field/{0}_{1}/{2}/{3}".format(ensemble_year, ensemble_id, year, ar_id) + "/" + "{0}_u850_aorc_res.nc".format(ar_id))
-    v_xarray = xr.load_dataset(
-        r"/home/yliu2232/miss_design_storm/cesm2_random_storms/cesm2_ar_covariate_field/{0}_{1}/{2}/{3}".format(ensemble_year, ensemble_id, year, ar_id) + "/" + "{0}_v850_aorc_res.nc".format(ar_id))
-
-    # load sr rainfall data
-    aorc_array = np.load(r"/home/yliu2232/miss_design_storm/super_resolution/model_prediction/CESM2/noise_generation_sr_rainfall/{0}_{1}/{2}".format(ensemble_year, ensemble_id, year) + "/" + "{0}_sr_rainfall.npy".format(ar_id))
+    u_xarray = xr.load_dataset(cesm_rainstorm_folder + "/" + "{0}_u850_cesm_res.nc".format(ar_id))
+    v_xarray = xr.load_dataset(cesm_rainstorm_folder + "/" + "{0}_v850_cesm_res.nc".format(ar_id))
 
     # get numpy array
     time_steps = u_xarray['time'].data
-    u_array = u_xarray['u850'].data
-    v_array = v_xarray['v850'].data
     # aorc_array = aorc_xarray['aorc'].data
+    coarse_u_array = u_xarray['u850'].data
+    coarse_v_array = v_xarray['v850'].data
+
+    u_array = np.zeros((coarse_u_array.shape[0], 630, 1024))
+    v_array = np.zeros((coarse_v_array.shape[0], 630, 1024))
+
+    # set up AORC coordinates
+    aorc_lat = np.linspace(50, 29, 630)
+    aorc_lon = np.linspace(-113.16734, -79.068704, 1024)
+
+    cesm_lat = np.linspace(50.41884817, 28.7434555, 24)
+    cesm_lon = np.linspace(-113.75, -78.75, 29)
+
+    # interpolate to AORC resolution
+    for time_index in range(coarse_u_array.shape[0]):
+        curr_coarse_u_array = coarse_u_array[time_index]
+        curr_coarse_v_array = coarse_v_array[time_index]
+
+        u_array[time_index] = linear_interpolation(curr_coarse_u_array, cesm_lon, cesm_lat, aorc_lon, aorc_lat)
+        v_array[time_index] = linear_interpolation(curr_coarse_v_array, cesm_lon, cesm_lat, aorc_lon, aorc_lat)
 
     # set up AORC coordinates
     aorc_lat = np.linspace(50, 29, 630)
@@ -269,14 +290,12 @@ if __name__ == "__main__":
     # generate a copy
     sub_ar_prcp_field_copy = np.where(aorc_array < 0.2, 0, aorc_array)
 
-    final_prcp_noise_array, step_report = noise_generation(sub_ar_prcp_field_copy, raw_cesm_prcp_array, u_array * 3600 * 6,
+    # in this version, the temporal auto-correlation function is calculated by CESM2 precipitation
+    final_prcp_noise_array, step_report = noise_generation(sub_ar_prcp_field_copy, raw_cesm_prcp_array,
+                                                           u_array * 3600 * 6,
                                                            v_array * 3600 * 6,
                                                            aorc_lon, aorc_lat, window_size, window_function,
                                                            overlap_ratio, ssft_war_thr, seed)
-
-    # save the noise field output
-    save_location = r"/home/yliu2232/miss_design_storm/cesm2_random_storms/noise_field/{0}_{1}/{2}/{3}".format(ensemble_year, ensemble_id, year, ar_id)
-    create_folder(save_location)
 
     # create a ds
     # Create the dataset for scipy scale parameter
@@ -288,11 +307,9 @@ if __name__ == "__main__":
             'longitude': aorc_lon
         },
         attrs={'description': "Noise field {0} for AORC AR id {1}".format(realization,
-            ar_id)}
+                                                                          ar_id)}
     )
 
     # save the dataset
-    noise_ds.to_netcdf(save_location + "/" + "{0}_{1}_noise.nc".format(ar_id, realization), encoding={"aorc": {"dtype": "float32", "zlib": True}})
-
-    # save the ffst report
-    # step_report.to_csv(r"/home/yliu2232/miss_design_storm/random_storms/noise_field/{0}".format(year) + "/" + "{0}_report.csv".format(ar_id), index = False)
+    noise_ds.to_netcdf(save_folder + "/" + "{0}_{1}_noise.nc".format(ar_id, realization),
+                       encoding={"aorc": {"dtype": "float32", "zlib": True}})

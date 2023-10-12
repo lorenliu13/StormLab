@@ -4,10 +4,8 @@
 
 import xarray as xr
 import numpy as np
-import xesmf as xe
 import pandas as pd
 import os
-import multiprocessing
 from scipy import interpolate
 
 
@@ -45,16 +43,33 @@ def linear_interpolation(array, old_x, old_y, new_x, new_y):
     return new_z
 
 
-def extract_ar_era(year, variable):
+if __name__ == "__main__":
 
-    print("Start processing {0} {1}".format(year, variable))
+    # Determine the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Navigate to the desired save folder relative to the script's directory
+    save_folder = os.path.join(script_dir, '../../../output/era5_rainstorms')
+
+    # Navigate to the desired load folder relative to the script's directory
+    era_folder = os.path.join(script_dir, '../../../data/era5/regridded_annual_era5')
+    era_tracking_folder = os.path.join(script_dir, '../../../data/era5/era5_tracking')
+
+
+    year = 2020
+
+    variable_list = ["mean_total_precipitation_rate", "total_column_water_vapour", "vertical_integral_of_water_vapour_flux",
+                     "850_u_component_of_wind", "850_v_component_of_wind"]
+    variable = "mean_total_precipitation_rate"
+
     # load the catalog
-    ar_catalog = pd.read_csv(r"/home/yliu2232/miss_design_storm/6h_tracking_cesm_res/6h_ar_catalog" + "/" + "{0}_catalog.csv".format(year))
+    ar_catalog = pd.read_csv(
+        era_tracking_folder + "/" + "{0}_catalog.csv".format(year))
     ar_ids = np.unique(ar_catalog['storm_id'].values)
 
     # load data set
     var_xarray = xr.load_dataset(
-        "/home/yliu2232/miss_design_storm/raw_data/ERA5/ERA5_6h" + "/" + str(year) + "/" + "ERA5_6H_{0}_{1}_cesm_res.nc".format(variable, year))
+        era_folder + "/" + "ERA5_6H_{0}_{1}_cesm_res.nc".format(variable, year))
     # get the variable name
     short_name = [k for k in var_xarray.data_vars.keys()]
     short_name = short_name[0]
@@ -67,58 +82,11 @@ def extract_ar_era(year, variable):
         # get months
         storm_timestep_months = storm_timesteps.dt.month.values
 
-        # if in year 1979, skip storm that starts in January
-        if (year == 1979) and (storm_timestep_months[0] == 1):
-            print("AORC data is not available for storm {0}".format(ar_id))
-            continue
-
-        # if ar_id == 202100112:
-        #     # skip this storm event because missing aorc data at 20211231
-        #     continue
-
         # extract the data array
         # select the time during the AR-event
         var_data_xarray = var_xarray.sel(time=ar_record['time'].values)
 
-        # create a folder
-        save_folder = r"/home/yliu2232/miss_design_storm/6h_ar_event_cesm_res/{0}/{1}".format(year, ar_id)
-        create_folder(save_folder)
-
         # save the era5 with cesm2 resolution
-        var_data_xarray.to_netcdf(save_folder + "/" + "{0}_{1}_cesm_res.nc".format(ar_id, variable), encoding={short_name: {"dtype": "float32", "zlib": True}})
+        var_data_xarray.to_netcdf(save_folder + "/" + "{0}_{1}_cesm_res.nc".format(ar_id, variable),
+                                  encoding={short_name: {"dtype": "float32", "zlib": True}})
 
-
-def run_task(task):
-
-    year = task['year']
-    variable = task['variable']
-
-    extract_ar_era(year, variable)
-
-if __name__ == "__main__":
-
-    # year_list = np.arange(1979, 2011)
-    year_list = np.arange(1979, 2022)
-    variable_dict = {}
-    # variable_list = ["mean_total_precipitation_rate", "total_column_water_vapour",
-    #                        "mean_vertically_integrated_moisture_divergence",
-    #                        "vertical_integral_of_water_vapour_flux",
-    #                        "500_vertical_velocity"]
-
-    # Run on 02/11/2023, attach 850 mb wind to each AR event
-    variable_list = ["mean_total_precipitation_rate", "total_column_water_vapour", "vertical_integral_of_water_vapour_flux",
-                     "850_u_component_of_wind", "850_v_component_of_wind"]
-    # variable_list = ["vertical_integral_of_water_vapour_flux"]
-
-    task_list = []
-    for variable in variable_list:
-        for year in year_list:
-            task = {'year':year, 'variable':variable}
-            task_list.append(task)
-            # file_folder = r"/slow/yliu2232/ERA5/ERA5_3h"
-            # extract_ar_era(year, file_folder, variable)
-            # print("Processing {0} in {1}".format(variable, year))
-
-    pool = multiprocessing.Pool(processes=6)
-    pool.map(run_task, task_list)
-    print("All task is finished.")
