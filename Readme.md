@@ -1,4 +1,4 @@
-# StormLab: space-time nonstationary rainfall model for large area basins. 
+# StormLab: Space-time Nonstationary Rainfall Model for Large Area Basins 
 <img src="/images/brief_figure_20231130.png" width="100%" height="100%">
 Figure: (A) Graphical showing how StormLab converts large-scale climate model predictions into thosands of realistic high-resolution rainfall simulations. (B) Rainfall "frequency curve" for Mississippi Basin rainfall, showing close agreement between high-resolution StormLab simulations and validation measurements.
 
