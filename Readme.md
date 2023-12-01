@@ -1,5 +1,5 @@
 # StormLab: space-time nonstationary rainfall model for large area basins. 
-<img src="/images/brief_figure_20231130.png" width="50%" height="20%">
+<img src="/images/brief_figure_20231130.png" width="50%" height="50%">
 
 This repository contains code to implement StormLab, a stochastic rainfall generator that simulate 6-hour, 0.03° resolution rainfall fields over large-area river basins conditioned on global climate model data. 
 
