@@ -1,5 +1,6 @@
 # StormLab: space-time nonstationary rainfall model for large area basins. 
 <img src="/images/brief_figure_20231130.png" width="100%" height="100%">
+Figure: (A) Graphical showing how StormLab converts large-scale climate model predictions into thosands of realistic high-resolution rainfall simulations. (B) Rainfall "frequency curve" for Mississippi Basin rainfall, showing close agreement between high-resolution StormLab simulations and validation measurements.
 
 This repository contains code to implement StormLab, a stochastic rainfall generator that simulate 6-hour, 0.03° resolution rainfall fields over large-area river basins conditioned on global climate model data. 
 
