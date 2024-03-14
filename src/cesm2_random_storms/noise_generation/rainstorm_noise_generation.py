@@ -1,4 +1,5 @@
 # Generate space-time noise fields for each CESM2 rainstorm events.
+# Part of the code was obtained from the pysteps package: https://pysteps.readthedocs.io/en/stable/
 # Yuan Liu
 # 2023/05/08
 

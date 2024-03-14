@@ -1,3 +1,5 @@
+# The FFT code here was obtained from the pysteps package: https://pysteps.readthedocs.io/en/stable/
+
 """
 pysteps.noise.fftgenerators
 ===========================
