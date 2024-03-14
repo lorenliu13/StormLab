@@ -197,6 +197,7 @@ StormLab is released under the [MIT License](https://opensource.org/licenses/MIT
 ## Authors
 * [Yuan Liu](https://her.cee.wisc.edu/group-members/) - *research & developer*
 * [Daniel B. Wright](https://her.cee.wisc.edu/group-members/) - *research*
+* [David J. Lorenz](http://djlorenz.github.io/) - *research*
 
 ## Attribution
 This project uses code from the following repositories:
