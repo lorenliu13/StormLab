@@ -3,29 +3,14 @@
 Figure: (A) Graphical showing how StormLab converts large-scale climate model predictions into thosands of realistic high-resolution rainfall simulations. (B) Rainfall "frequency curve" for Mississippi Basin rainfall, showing close agreement between high-resolution StormLab simulations and validation measurements.
 
 ## Introduction
-This repository contains code to implement StormLab, a stochastic rainfall generator that simulate 6-hour, 0.03° resolution rainfall fields over large-area river basins conditioned on global climate model data. 
-
-The main functions of the codes are as follows: 
-1. Bias correction
-	- Regrid ERA5 to CESM2 resolution. Bias-correct the CESM2 data against ERA5 using the CDF-t method. 
-2. Storm tracking
-	- Identify and track strong integrated water vapor transport events and associated rainstorms in ERA5 and CESM2 data. 
-	- Extract atmospheric variable fields and AORC rainfall from identified ERA5 rainstorms.
-	- Extract atmospheric variable fields from identified CESM2 rainstorms.  
-3. Monthly distribution fitting
-	- Fit distributions to ERA5 atmospheric variables and AORC rainfall at each grid cell. 
-	- Generate fields for distribution parameter coefficients. 
-4. AORC rainfall matching
-	- Match AORC rainfall to CESM2 rainstorms. 
-5. CESM2 random storm generation
-	- Generate spatially correlated noise fields. 
-	- Generate conditional distribution parameters based on CESM2 atmospheric variables. 
-	- Simulate stochastic rainfall fields of CESM2 rainstorms. 
+This repository contains code to implement StormLab, a stochastic rainfall generator that simulate 6-hour, 0.03° resolution rainfall fields over large-area river basins conditioned on global climate model data.
 
 ## Installation
-`git clone https://github.com/lorenliu13/StormLab.git`
+`pip install stormlab-1.0-py3-none-any.whl`
+
 ## Dependencies
 Required packages are listed in requirements.txt
+
 ## Usage
 1. Download the example data and unzip at the code folder "/StormLab."
 	- Google Drive: https://drive.google.com/file/d/1MJzO8bhKJxZ5sc7OuIQQQPw3AmQLKSME/view?usp=sharing
