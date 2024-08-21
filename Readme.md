@@ -29,7 +29,9 @@ Required packages are listed in requirements.txt
 
 ## Citation
 If you use this model in your work, please cite:
-*Our publication is under preparation.*
+
+Liu, Y., Wright, D. B., & Lorenz, D. J. (2024). A Nonstationary Stochastic Rainfall Generator Conditioned on Global Climate Models for Design Flood Analyses in the Mississippi and Other Large River Basins. Water Resources Research, 60(5), e2023WR036826. https://doi.org/10.1029/2023WR036826
+
 
 ## Contributing
 Feel free to open an issue for bugs and feature requests.
