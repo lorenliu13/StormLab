@@ -1,9 +1,9 @@
 
 import numpy as np
 from skimage.segmentation import relabel_sequential
-from .tracking_utility import track
-from .tracking_utility import ivt_identification
-from .tracking_utility import attach_prcp
+from tracking_utility import track
+from tracking_utility import ivt_identification
+from tracking_utility import attach_prcp
 # import xarray as xr
 
 

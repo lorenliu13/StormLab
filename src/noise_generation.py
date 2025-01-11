@@ -247,7 +247,7 @@ def noise_generation(prcp_array, acf_array, u_array, v_array, lon_data, lat_data
     # For time interval >= 6-hours, wind advection is not recommended because assuming constant wind speed for larger than 6 hours may lead to distortion of the noise field.
     # In this case, the wind field can be set as zero.
     :param prcp_array: high-resolution precipitation field data, dimension (time, lat, lon), unit: mm/h
-    :param acf_array: lag-1 auto-correlation coefficient array (time, lat, lon), unit: dimensionless
+    :param acf_array: Array of lag-1 auto-correlation coefficients, dimension of (time, ), unit: dimensionless
     :param u_array: high-resolution u wind field data, dimension (time, lat, lon), unit: m/h
     :param v_array: high-resolution v wind field data, dimension (time, lat, lon), unit: m/h
     :param lon_data: longitude coordinate of the high-resolution precipitation field, dimension (lon,) (degree)

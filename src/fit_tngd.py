@@ -2,7 +2,7 @@ import pandas as pd
 import scipy.stats as st
 import numpy as np
 import os
-from .CSGD_hybrid import fit_regression_v2
+from CSGD_hybrid import fit_regression_v2
 from sklearn.linear_model import LogisticRegression
 
 
